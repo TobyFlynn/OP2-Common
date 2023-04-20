@@ -404,6 +404,8 @@ void gather_data_to_buffer_ptr_cuda(op_arg arg, halo_list eel, halo_list enl, ch
 
   op2_grp_counter++;
 
+  // Test if device sync here solves issue (not final fix)
+  cutilSafeCall(cudaDeviceSynchronize());
 }
 
 void scatter_data_from_buffer_ptr_cuda(op_arg arg, halo_list iel, halo_list inl, char *buffer, 

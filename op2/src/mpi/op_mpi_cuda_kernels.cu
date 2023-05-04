@@ -370,6 +370,8 @@ void gather_data_to_buffer_ptr_cuda(op_arg arg, halo_list eel, halo_list enl, ch
 
   check_realloc_buffer();
 
+  cutilSafeCall(cudaDeviceSynchronize());
+
   int soa = 0;
   if ((OP_auto_soa && arg.dat->dim > 1) || strstr(arg.dat->type, ":soa") != NULL) soa = 1;
 
@@ -383,9 +385,9 @@ void gather_data_to_buffer_ptr_cuda(op_arg arg, halo_list eel, halo_list enl, ch
     neigh_offsets[buf_rankpos] += eel->sizes[i] * arg.dat->size;
   }
   //Async upload
-  cudaMemcpyAsync(op2_grp_neigh_to_neigh_offsets_d,&op2_grp_neigh_to_neigh_offsets_h[op2_grp_counter*op2_grp_max_neighbours],eel->ranks_size * sizeof(unsigned),cudaMemcpyHostToDevice);
+  cudaMemcpyAsync(op2_grp_neigh_to_neigh_offsets_d,&op2_grp_neigh_to_neigh_offsets_h[op2_grp_counter*op2_grp_max_neighbours],eel->ranks_size * sizeof(unsigned),cudaMemcpyHostToDevice, op2_grp_secondary);
   //Launch kernel
-  gather_data_to_buffer_ptr_cuda_kernel<<<1 + ((eel->size - 1) / 192),192>>>(arg.dat->data_d, buffer, export_exec_list_d[arg.dat->set->index], export_exec_list_disps_d[arg.dat->set->index], 
+  gather_data_to_buffer_ptr_cuda_kernel<<<1 + ((eel->size - 1) / 192),192,0,op2_grp_secondary>>>(arg.dat->data_d, buffer, export_exec_list_d[arg.dat->set->index], export_exec_list_disps_d[arg.dat->set->index],
     op2_grp_neigh_to_neigh_offsets_d, eel->ranks_size, soa, arg.dat->size/arg.dat->dim, arg.dat->dim, arg.dat->set->size+arg.dat->set->exec_size+arg.dat->set->nonexec_size);
   op2_grp_counter++;
 
@@ -399,13 +401,13 @@ void gather_data_to_buffer_ptr_cuda(op_arg arg, halo_list eel, halo_list enl, ch
     neigh_offsets[buf_rankpos] += enl->sizes[i] * arg.dat->size;
   }
   //Async upload
-  cudaMemcpyAsync(op2_grp_neigh_to_neigh_offsets_d,&op2_grp_neigh_to_neigh_offsets_h[op2_grp_counter*op2_grp_max_neighbours],enl->ranks_size * sizeof(unsigned),cudaMemcpyHostToDevice);
+  cudaMemcpyAsync(op2_grp_neigh_to_neigh_offsets_d,&op2_grp_neigh_to_neigh_offsets_h[op2_grp_counter*op2_grp_max_neighbours],enl->ranks_size * sizeof(unsigned),cudaMemcpyHostToDevice, op2_grp_secondary);
   //Launch kernel
-  gather_data_to_buffer_ptr_cuda_kernel<<<1 + ((enl->size - 1) / 192),192>>>(arg.dat->data_d, buffer, export_nonexec_list_d[arg.dat->set->index], export_nonexec_list_disps_d[arg.dat->set->index], 
+  gather_data_to_buffer_ptr_cuda_kernel<<<1 + ((enl->size - 1) / 192),192,0,op2_grp_secondary>>>(arg.dat->data_d, buffer, export_nonexec_list_d[arg.dat->set->index], export_nonexec_list_disps_d[arg.dat->set->index],
     op2_grp_neigh_to_neigh_offsets_d, enl->ranks_size, soa, arg.dat->size/arg.dat->dim, arg.dat->dim, arg.dat->set->size+arg.dat->set->exec_size+arg.dat->set->nonexec_size);
 
   op2_grp_counter++;
-  cutilSafeCall(cudaEventRecord(op2_grp_download_event,0));
+  cutilSafeCall(cudaEventRecord(op2_grp_download_event,op2_grp_secondary));
 }
 
 void scatter_data_from_buffer_ptr_cuda(op_arg arg, halo_list iel, halo_list inl, char *buffer, 

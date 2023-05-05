@@ -1130,9 +1130,9 @@ def op2_gen_cuda_simple(master, date, consts, kernels,sets, macro_defs):
       code('int nblocks = (end-start-1)/nthread+1;')
       if reduct:
         code('int nshared = reduct_size*nthread;')
-        code('op_cuda_'+name+'<<<nblocks,nthread,nshared>>>(')
+        code('op_cuda_'+name+'<<<nblocks,nthread,nshared,round==0 ? op2_core_set : 0>>>(')
       else:
-        code('op_cuda_'+name+'<<<nblocks,nthread>>>(')
+        code('op_cuda_'+name+'<<<nblocks,nthread,0,round==0 ? op2_core_set : 0>>>(')
       if nopts > 0:
         code('optflags,')
       for m in range(1,ninds+1):

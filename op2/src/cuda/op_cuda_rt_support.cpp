@@ -57,7 +57,6 @@
 
 typedef struct cudaDeviceProp cudaDeviceProp_t;
 
-
 // arrays for global constants and reductions
 
 int OP_consts_bytes = 0, OP_reduct_bytes = 0;
@@ -311,7 +310,7 @@ void deviceSync() {
 }
 
 #ifndef OPMPI
-
+cudaStream_t op2_core_set;
 void cutilDeviceInit(int argc, char **argv) {
   (void)argc;
   (void)argv;
@@ -340,6 +339,8 @@ void cutilDeviceInit(int argc, char **argv) {
     cudaDeviceProp_t deviceProp;
     cutilSafeCall(cudaGetDeviceProperties(&deviceProp, deviceId));
     printf("\n Using CUDA device: %d %s\n", deviceId, deviceProp.name);
+
+    cutilSafeCall(cudaStreamCreateWithFlags(&op2_core_set, cudaStreamNonBlocking));
   } else {
     printf("\n Using CPU\n");
   }

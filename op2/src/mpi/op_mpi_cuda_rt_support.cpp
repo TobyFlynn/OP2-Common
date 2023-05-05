@@ -77,6 +77,7 @@ int **import_nonexec_list_disps_d = NULL;
 
 cudaEvent_t op2_grp_download_event;
 cudaStream_t op2_grp_secondary;
+cudaStream_t op2_core_set;
 
 void cutilDeviceInit(int argc, char **argv) {
   (void)argc;
@@ -153,6 +154,7 @@ void cutilDeviceInit(int argc, char **argv) {
     cutilSafeCall(cudaGetDeviceProperties(&deviceProp, deviceId));
     printf("\n Using CUDA device: %d %s on rank %d\n", deviceId,
            deviceProp.name, rank);
+    cutilSafeCall(cudaStreamCreateWithFlags(&op2_core_set, cudaStreamNonBlocking));
     cutilSafeCall(cudaStreamCreateWithFlags(&op2_grp_secondary, cudaStreamNonBlocking));
     cutilSafeCall(cudaEventCreateWithFlags(&op2_grp_download_event, cudaEventDisableTiming));
   } else {

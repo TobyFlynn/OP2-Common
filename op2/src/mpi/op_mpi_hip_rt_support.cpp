@@ -746,7 +746,6 @@ void op_realloc_comm_buffer(char **send_buffer_host, char **recv_buffer_host,
 
 void op_download_buffer_async(char *send_buffer_device, char *send_buffer_host, unsigned size_send) {
   //Make sure gather kernels on the 0 stream finished before starting download
-  cutilSafeCall(hipEventRecord(op2_grp_download_event,0));
   cutilSafeCall(hipStreamWaitEvent(op2_grp_secondary, op2_grp_download_event,0));
   cutilSafeCall(hipMemcpyAsync(send_buffer_host, send_buffer_device, size_send, hipMemcpyDeviceToHost, op2_grp_secondary));
 }
@@ -758,6 +757,13 @@ void op_scatter_sync() {
   cutilSafeCall(hipEventRecord(op2_grp_download_event, op2_grp_secondary));
   cutilSafeCall(hipStreamWaitEvent(0, op2_grp_download_event,0));
 }
+
+void op_gather_sync() {
+  // Explicitly sync the gather kernels when using -gpudirect
+  // as op_download_buffer_async won't be called
+  cutilSafeCall(hipEventSynchronize(op2_grp_download_event));
+}
+
 void op_download_buffer_sync() {
   cutilSafeCall(hipStreamSynchronize(op2_grp_secondary));
 }

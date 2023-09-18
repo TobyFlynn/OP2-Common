@@ -402,8 +402,9 @@ int op_mpi_halo_exchanges(op_set set, int nargs, op_arg *args) {
   return set->size;
 }
 
-int op_mpi_halo_exchanges_grouped(op_set set, int nargs, op_arg *args, int device){
+int op_mpi_halo_exchanges_grouped(op_set set, int nargs, op_arg *args, int device, int force_halo_exchange){
   (void)device;
+  (void)force_halo_exchange;
   return device == 1 ? op_mpi_halo_exchanges(set, nargs, args) : op_mpi_halo_exchanges_cuda(set, nargs, args);
 }
 
@@ -422,8 +423,9 @@ void op_mpi_wait_all(int nargs, op_arg *args) {
   (void)args;
 }
 
-void op_mpi_wait_all_grouped(int nargs, op_arg *args, int device) {
+void op_mpi_wait_all_grouped(int nargs, op_arg *args, int device, int force_halo_exchange) {
   (void)device;
+  (void)force_halo_exchange;
   (void)nargs;
   (void)args;
 }

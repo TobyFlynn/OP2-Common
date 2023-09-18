@@ -56,7 +56,7 @@
 // ptscotch header
 #ifdef HAVE_PTSCOTCH
 #include <ptscotch.h>
-
+typedef float real_t;
 #endif
 
 // parmetis header

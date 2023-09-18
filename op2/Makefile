@@ -214,7 +214,7 @@ $(OBJ)/hip/%+mpi.o: src/hip/%.cpp | $(OBJ)
 	$(MPICXX) $(CXXFLAGS) $(HIPFLAGS) $(INC) -DOPMPI -c $< -o $@
 
 $(OBJ)/hip/%.o: src/hip/%.cpp | $(OBJ)
-	$(CXX) $(CXXFLAGS) $(HIPFLAGS) $(INC) -c $< -o $@
+	$(HIPCXX) $(CXXFLAGS) $(HIPFLAGS) $(INC) -c $< -o $@
 
 $(OBJ)/openmp4/%.o: src/openmp4/%.cpp | $(OBJ)
 	$(CXX) $(CXXFLAGS) $(OMP_OFFLOAD_CXXFLAGS) $(INC) -c $< -o $@

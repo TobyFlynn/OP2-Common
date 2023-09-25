@@ -211,7 +211,7 @@ $(OBJ)/cuda/%.o: src/cuda/%.cpp | $(OBJ)
 	$(CXX) $(CXXFLAGS) $(INC) -DSET_CUDA_CACHE_CONFIG -c $< -o $@
 
 $(OBJ)/hip/%+mpi.o: src/hip/%.cpp | $(OBJ)
-	$(MPICXX) $(CXXFLAGS) $(HIPFLAGS) $(INC) -DOPMPI -c $< -o $@
+	$(HIPCXX) $(CXXFLAGS) $(HIPFLAGS) $(INC) -DOPMPI -c $< -o $@
 
 $(OBJ)/hip/%.o: src/hip/%.cpp | $(OBJ)
 	$(HIPCXX) $(CXXFLAGS) $(HIPFLAGS) $(INC) -c $< -o $@
@@ -226,13 +226,13 @@ $(OBJ)/mpi/%.o: src/mpi/%.cu | $(OBJ)
 	$(NVCC) $(NVCCFLAGS) $(INC) -c $< -o $@
 
 $(OBJ)/mpi/op_mpi_hip_decl.o: src/mpi/op_mpi_hip_decl.cpp | $(OBJ)
-	$(MPICXX) $(CXXFLAGS) $(HIPFLAGS) $(INC) -c $< -o $@
+	$(HIPCXX) $(CXXFLAGS) $(HIPFLAGS) $(INC) -c $< -o $@
 
 $(OBJ)/mpi/op_mpi_hip_rt_support.o: src/mpi/op_mpi_hip_rt_support.cpp | $(OBJ)
-	$(MPICXX) $(CXXFLAGS) $(HIPFLAGS) $(INC) -c $< -o $@
+	$(HIPCXX) $(CXXFLAGS) $(HIPFLAGS) $(INC) -c $< -o $@
 
 $(OBJ)/mpi/op_mpi_hip_kernels.o: src/mpi/op_mpi_hip_kernels.cpp | $(OBJ)
-	$(MPICXX) $(CXXFLAGS) $(HIPFLAGS) $(INC) -c $< -o $@
+	$(HIPCXX) $(CXXFLAGS) $(HIPFLAGS) $(INC) -c $< -o $@
 
 $(OBJ)/fortran/%+mpi.o: src/fortran/%.c | $(OBJ)
 	$(MPICC) $(CFLAGS) $(INC) -DOPMPI -c $< -o $@

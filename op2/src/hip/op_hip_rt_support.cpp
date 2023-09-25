@@ -460,6 +460,17 @@ void op_mpi_set_dirtybit_cuda(int nargs, op_arg *args) {
   }
 }
 
+void op_mpi_set_dirtybit_force_halo_exchange(int nargs, op_arg *args, int device) {
+
+  for (int n = 0; n < nargs; n++) {
+    if ((args[n].opt == 1) && (args[n].argtype == OP_ARG_DAT) &&
+        (args[n].acc == OP_INC || args[n].acc == OP_WRITE
+        || args[n].acc == OP_RW)) {
+      args[n].dat->dirty_hd = device;
+    }
+  }
+}
+
 void op_mpi_wait_all_cuda(int nargs, op_arg *args) {
   (void)nargs;
   (void)args;

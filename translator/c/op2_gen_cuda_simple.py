@@ -100,8 +100,12 @@ def op2_gen_cuda_simple(master, date, consts, kernels,sets, macro_defs, hip = 0)
   global FORTRAN, CPP, g_m, file_text, depth
 
   cuda = 'cuda'
+  symbol_wrapper_l = ''
+  symbol_wrapper_r = ''
   if hip == 1:
     cuda = 'hip'
+    symbol_wrapper_l = 'HIP_SYMBOL('
+    symbol_wrapper_r = ')'
 
   OP_ID   = 1;  OP_GBL   = 2;  OP_MAP = 3;
 
@@ -1000,12 +1004,12 @@ def op2_gen_cuda_simple(master, date, consts, kernels,sets, macro_defs, hip = 0)
             k = k + [mapnames[g_m]]
             IF('(OP_kernels[' +str(nk)+ '].count==1) || (opDat'+str(invinds[inds[g_m]-1])+'_'+name+'_stride_OP2HOST != getSetSizeFromOpArg(&arg'+str(g_m)+'))')
             code('opDat'+str(invinds[inds[g_m]-1])+'_'+name+'_stride_OP2HOST = getSetSizeFromOpArg(&arg'+str(g_m)+');')
-            code(cuda+'MemcpyToSymbol(opDat'+str(invinds[inds[g_m]-1])+'_'+name+'_stride_OP2CONSTANT, &opDat'+str(invinds[inds[g_m]-1])+'_'+name+'_stride_OP2HOST,sizeof(int));')
+            code(cuda+'MemcpyToSymbol('+symbol_wrapper_l+'opDat'+str(invinds[inds[g_m]-1])+'_'+name+'_stride_OP2CONSTANT'+symbol_wrapper_r+', &opDat'+str(invinds[inds[g_m]-1])+'_'+name+'_stride_OP2HOST,sizeof(int));')
             ENDIF()
       if dir_soa!=-1:
           IF('(OP_kernels[' +str(nk)+ '].count==1) || (direct_'+name+'_stride_OP2HOST != getSetSizeFromOpArg(&arg'+str(dir_soa)+'))')
           code('direct_'+name+'_stride_OP2HOST = getSetSizeFromOpArg(&arg'+str(dir_soa)+');')
-          code(cuda+'MemcpyToSymbol(direct_'+name+'_stride_OP2CONSTANT,&direct_'+name+'_stride_OP2HOST,sizeof(int));')
+          code(cuda+'MemcpyToSymbol('+symbol_wrapper_l+'direct_'+name+'_stride_OP2CONSTANT'+symbol_wrapper_r+',&direct_'+name+'_stride_OP2HOST,sizeof(int));')
           ENDIF()
 
 #
@@ -1388,7 +1392,7 @@ def op2_gen_cuda_simple(master, date, consts, kernels,sets, macro_defs, hip = 0)
       IF('dim*sizeof('+consts[nc]['type'][1:-1]+')>MAX_CONST_SIZE')
       code('printf("error: MAX_CONST_SIZE not big enough\\n"); exit(1);')
       ENDIF()
-    code('cutilSafeCall('+cuda+'MemcpyToSymbol('+consts[nc]['name']+'_cuda, dat, dim*sizeof('+consts[nc]['type'][1:-1]+')));')
+    code('cutilSafeCall('+cuda+'MemcpyToSymbol('+symbol_wrapper_l+consts[nc]['name']+'_cuda'+symbol_wrapper_r+', dat, dim*sizeof('+consts[nc]['type'][1:-1]+')));')
     depth = depth - 2
     code('}')
 

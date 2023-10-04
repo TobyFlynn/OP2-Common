@@ -1303,6 +1303,13 @@ def op2_gen_cuda_simple(master, date, consts, kernels,sets, macro_defs, hip = 0)
         code('op_mpi_reduce(&<ARG>,<ARG>h);')
 
     ENDIF()
+
+    #zero set size issues
+    if ninds>0:
+      IF('set_size == 0 || set_size == set->core_size')
+      code('op_mpi_wait_all_grouped(nargs, args, 2, 0);')
+      ENDIF()
+
     if force_halo_compute:
       code('op_mpi_set_dirtybit_force_halo_exchange(nargs, args, 2);')
     else:

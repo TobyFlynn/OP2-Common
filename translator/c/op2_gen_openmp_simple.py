@@ -423,18 +423,18 @@ def op2_gen_openmp_simple(master, date, consts, kernels):
       if reduct:
         comm(' combine reduction data')
         IF('col == Plan->ncolors_owned-1')
-        for m in range(0,nargs):
-          if maps[m] == OP_GBL and accs[m] != OP_READ:
+        for g_m in range(0,nargs):
+          if maps[g_m] == OP_GBL and accs[g_m] != OP_READ:
             FOR('thr','0','nthreads')
-            if accs[m]==OP_INC:
+            if accs[g_m]==OP_INC:
               FOR('d','0','<DIM>')
               code('<ARG>h[d] += <ARG>_l[d+thr*64];')
               ENDFOR()
-            elif accs[m]==OP_MIN:
+            elif accs[g_m]==OP_MIN:
               FOR('d','0','<DIM>')
               code('<ARG>h[d]  = MIN(<ARG>h[d],<ARG>_l[d+thr*64]);')
               ENDFOR()
-            elif  accs[m]==OP_MAX:
+            elif  accs[g_m]==OP_MAX:
               FOR('d','0','<DIM>')
               code('<ARG>h[d]  = MAX(<ARG>h[d],<ARG>_l[d+thr*64]);')
               ENDFOR()

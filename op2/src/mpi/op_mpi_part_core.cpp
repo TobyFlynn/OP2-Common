@@ -3403,11 +3403,6 @@ void partition(const char *lib_name, const char *lib_routine, op_set prime_set,
   }
   printf("Orphan edges: %d\n", ctr);
 #endif
-
-  // Calculate padding for SoA now that halos have been created
-  if(OP_soa_padding) {
-
-  }
 }
 
 extern int **OP_map_ptr_list;

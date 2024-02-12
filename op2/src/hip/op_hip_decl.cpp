@@ -109,25 +109,26 @@ op_dat op_decl_dat_char(op_set set, int dim, char const *type, int size,
   op_dat dat = op_decl_dat_core(set, dim, type, size, data, name);
 
   // transpose data
-  size_t set_size = dat->set->size + dat->set->exec_size + dat->set->nonexec_size
-                    + dat->set->padding_size;
+  size_t set_size = dat->set->size + dat->set->exec_size + dat->set->nonexec_size;
+  size_t set_size_with_padding = dat->set->size + dat->set->exec_size + dat->set->nonexec_size
+                                 + dat->set->padding_size;
   if (strstr(type, ":soa") != NULL || (OP_auto_soa && dim > 1)) {
     char *temp_data = (char *)malloc(dat->size * set_size * sizeof(char));
     int element_size = dat->size / dat->dim;
     for (size_t i = 0; i < dat->dim; i++) {
       for (size_t j = 0; j < set_size; j++) {
         for (size_t c = 0; c < element_size; c++) {
-          temp_data[element_size * i * set_size + element_size * j + c] =
+          temp_data[element_size * i * set_size_with_padding + element_size * j + c] =
               data[dat->size * j + element_size * i + c];
         }
       }
     }
     op_cpHostToDevice((void **)&(dat->data_d), (void **)&(temp_data),
-                      (size_t)dat->size * set_size);
+                      (size_t)dat->size * set_size_with_padding);
     free(temp_data);
   } else {
     op_cpHostToDevice((void **)&(dat->data_d), (void **)&(dat->data),
-                      (size_t)dat->size * set_size);
+                      (size_t)dat->size * set_size_with_padding);
   }
 
   return dat;
@@ -142,8 +143,10 @@ op_dat op_decl_dat_temp_char(op_set set, int dim, char const *type, int size,
     dat->data[i] = 0;
   dat->user_managed = 0;
 
+  size_t set_size = dat->set->size + dat->set->exec_size + dat->set->nonexec_size
+                    + dat->set->padding_size;
 	op_cpHostToDevice((void **)&(dat->data_d), (void **)&(dat->data),
-                    (size_t)dat->size * (set->size + set->padding_size));
+                    (size_t)dat->size * set_size);
 
   return dat;
 }
@@ -300,26 +303,27 @@ void op_upload_all() {
   op_dat_entry *item;
   TAILQ_FOREACH(item, &OP_dat_list, entries) {
     op_dat dat = item->dat;
-    size_t set_size = dat->set->size + dat->set->exec_size + dat->set->nonexec_size
-                      + dat->set->padding_size;
+    size_t set_size = dat->set->size + dat->set->exec_size + dat->set->nonexec_size;
+    size_t set_size_with_padding = dat->set->size + dat->set->exec_size + dat->set->nonexec_size
+                                 + dat->set->padding_size;
     if (dat->data_d) {
       if (strstr(dat->type, ":soa") != NULL || (OP_auto_soa && dat->dim > 1)) {
-        char *temp_data = (char *)malloc(dat->size * set_size * sizeof(char));
+        char *temp_data = (char *)malloc(dat->size * set_size_with_padding * sizeof(char));
         int element_size = dat->size / dat->dim;
         for (size_t i = 0; i < dat->dim; i++) {
           for (size_t j = 0; j < set_size; j++) {
             for (size_t c = 0; c < element_size; c++) {
-              temp_data[element_size * i * set_size + element_size * j + c] =
+              temp_data[element_size * i * set_size_with_padding + element_size * j + c] =
                   dat->data[dat->size * j + element_size * i + c];
             }
           }
         }
-        cutilSafeCall(hipMemcpy(dat->data_d, temp_data, (size_t)dat->size * set_size,
+        cutilSafeCall(hipMemcpy(dat->data_d, temp_data, (size_t)dat->size * set_size_with_padding,
                                  hipMemcpyHostToDevice));
         dat->dirty_hd = 0;
         free(temp_data);
       } else {
-        cutilSafeCall(hipMemcpy(dat->data_d, dat->data, (size_t)dat->size * set_size,
+        cutilSafeCall(hipMemcpy(dat->data_d, dat->data, (size_t)dat->size * set_size_with_padding,
                                  hipMemcpyHostToDevice));
         dat->dirty_hd = 0;
       }

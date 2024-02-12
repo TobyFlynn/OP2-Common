@@ -266,8 +266,12 @@ void op_mv_halo_device(op_set set, op_dat dat) {
                                 OP_import_nonexec_list[set->index]->size)));
 
   } else {
+    char *data_old = dat->data;
+    dat->data = (char *)malloc((size_t)dat->size * set_size_with_padding * sizeof(char));
+    memcpy(dat->data, data_old, dat->size * set_size * sizeof(char));
+    free(data_old);
     op_cpHostToDevice((void **)&(dat->data_d), (void **)&(dat->data),
-                      (size_t)dat->size * set_size);
+                      (size_t)dat->size * set_size_with_padding);
   }
   dat->dirty_hd = 0;
   if (dat->buffer_d != NULL) cutilSafeCall(hipFree(dat->buffer_d));

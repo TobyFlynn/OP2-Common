@@ -3033,7 +3033,8 @@ void op_mpi_exit() {
 int getSetSizeFromOpArg(op_arg *arg) {
   return arg->opt ? (arg->dat->set->size +
                      OP_import_exec_list[arg->dat->set->index]->size +
-                     OP_import_nonexec_list[arg->dat->set->index]->size)
+                     OP_import_nonexec_list[arg->dat->set->index]->size +
+                     arg->dat->set->padding_size)
                   : 0;
 }
 

@@ -685,6 +685,12 @@ void op_move_to_device() {
   for (int s = 0; s < OP_set_index; s++) {
     op_set set = OP_set_list[s];
     op_dat_entry *item;
+
+    if(OP_soa_padding)
+      set->padding_size = ((size-1)/4+1)*4 - size; // Aligned for int, float and double
+    else
+      set->padding_size = 0;
+
     TAILQ_FOREACH(item, &OP_dat_list, entries) {
       op_dat dat = item->dat;
 

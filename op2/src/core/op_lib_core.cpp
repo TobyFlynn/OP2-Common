@@ -50,6 +50,7 @@ int OP_diags = 0, OP_part_size = 0, OP_block_size = 64,
 double OP_hybrid_balance = 1.0;
 int OP_hybrid_gpu = 0;
 int OP_auto_soa = 0;
+int OP_soa_padding = 0;
 int OP_maps_base_index = 0;
 int OP_realloc = 1;
 
@@ -181,6 +182,11 @@ void op_set_args(int argc, char *argv) {
     OP_auto_soa = 1;
     op_printf("\n Enabling Automatic AoS->SoA Conversion\n");
   }
+  pch = strstr(argv, "OP_SOA_PADDING");
+  if (pch != NULL) {
+    OP_soa_padding = 1;
+    op_printf("\n Enabling Padding Elements For SoA\n");
+  }
   pch = strstr(argv, "OP_PARTIAL_EXCHANGE");
   if (pch != NULL) {
     OP_partial_exchange = 1;
@@ -227,6 +233,11 @@ void op_init_core(int argc, char **argv, int diags) {
   if (getenv("OP_AUTO_SOA") || OP_auto_soa == 1) {
     OP_auto_soa = 1;
     op_printf("\n Enabling Automatic AoS->SoA Conversion\n");
+  }
+
+  if (getenv("OP_SOA_PADDING") || OP_soa_padding == 1) {
+    OP_soa_padding = 1;
+    op_printf("\n Enabling Padding Elements For SoA\n");
   }
 
 #ifdef OP_BLOCK_SIZE
@@ -303,6 +314,11 @@ op_set op_decl_set_core(int size, char const *name) {
   set->name = copy_str(name);
   set->exec_size = 0;
   set->nonexec_size = 0;
+  // if(OP_soa_padding)
+  //   set->padding_size = ((size-1)/4+1)*4 - size; // Aligned for int, float and double
+  // else
+  //   set->padding_size = 0;
+  set->padding_size = 0;
   OP_set_list[OP_set_index++] = set;
 
   return set;
@@ -403,7 +419,7 @@ op_dat op_decl_dat_core(op_set set, int dim, char const *type, int size,
   dat->set = set;
   dat->dim = dim;
   size_t bytes = (size_t)dim * (size_t)size * (size_t)
-                 (set->size+set->exec_size+set->nonexec_size) * sizeof(char);
+                 (set->size+set->exec_size+set->nonexec_size+set->padding_size) * sizeof(char);
 
   if (OP_realloc) {
     char *new_data = (char *)op_malloc(bytes);

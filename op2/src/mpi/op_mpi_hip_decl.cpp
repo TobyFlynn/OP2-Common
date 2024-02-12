@@ -162,7 +162,7 @@ op_dat op_decl_dat_temp_char(op_set set, int dim, char const *type, int size,
   // create empty data block to assign to this temporary dat (including the
   // halos)
   int set_size = set->size + OP_import_exec_list[set->index]->size +
-                 OP_import_nonexec_list[set->index]->size;
+                 OP_import_nonexec_list[set->index]->size + set->padding_size;
 
   // initialize data bits to 0
   for (size_t i = 0; i < set_size * dim * size; i++)
@@ -236,19 +236,27 @@ int op_free_dat_temp_char(op_dat dat) {
 void op_mv_halo_device(op_set set, op_dat dat) {
   int set_size = set->size + OP_import_exec_list[set->index]->size +
                  OP_import_nonexec_list[set->index]->size;
+  int set_size_with_padding = set->size + OP_import_exec_list[set->index]->size +
+                 OP_import_nonexec_list[set->index]->size + set->padding_size;
   if (strstr(dat->type, ":soa") != NULL || (OP_auto_soa && dat->dim > 1)) {
-    char *temp_data = (char *)malloc((size_t)dat->size * set_size * sizeof(char));
+    char *temp_data = (char *)malloc((size_t)dat->size * set_size_with_padding * sizeof(char));
     size_t element_size = (size_t)dat->size / dat->dim;
     for (size_t i = 0; i < dat->dim; i++) {
       for (size_t j = 0; j < set_size; j++) {
         for (size_t c = 0; c < element_size; c++) {
-          temp_data[element_size * i * set_size + element_size * j + c] =
+          temp_data[element_size * i * set_size_with_padding + element_size * j + c] =
               dat->data[(size_t)dat->size * j + element_size * i + c];
         }
       }
     }
+
+    char *data_old = dat->data;
+    dat->data = (char *)malloc((size_t)dat->size * set_size_with_padding * sizeof(char));
+    memcpy(dat->data, data_old, dat->size * set_size * sizeof(char));
+    free(data_old);
+
     op_cpHostToDevice((void **)&(dat->data_d), (void **)&(temp_data),
-                      (size_t)dat->size * set_size);
+                      (size_t)dat->size * set_size_with_padding);
     free(temp_data);
 
     if (dat->buffer_d_r != NULL) cutilSafeCall(hipFree(dat->buffer_d_r));

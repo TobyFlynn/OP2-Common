@@ -61,7 +61,7 @@ extern op_map *OP_map_list;
 extern Double_linked_list OP_dat_list;
 extern op_kernel *OP_kernels;
 extern double OP_plan_time;
-extern int OP_auto_soa;
+extern int OP_auto_soa, OP_soa_padding;
 
 /*
  * declaration of C routines wrapping lower layer implementations (e.g. CUDA,

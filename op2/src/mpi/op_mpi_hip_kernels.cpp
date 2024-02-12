@@ -163,7 +163,7 @@ void gather_data_to_buffer(op_arg arg, halo_list exp_exec_list,
       (OP_auto_soa && arg.dat->dim > 1)) {
 
     int set_size = arg.dat->set->size + arg.dat->set->exec_size +
-                   arg.dat->set->nonexec_size;
+                   arg.dat->set->nonexec_size + arg.dat->set->padding_size;
 
     hipLaunchKernelGGL(export_halo_gather_soa, blocks, threads, 0, 0, 
         export_exec_list_d[arg.dat->set->index], arg.data_d,
@@ -197,7 +197,7 @@ void gather_data_to_buffer_partial(op_arg arg, halo_list exp_nonexec_list) {
       (OP_auto_soa && arg.dat->dim > 1)) {
 
     int set_size = arg.dat->set->size + arg.dat->set->exec_size +
-                   arg.dat->set->nonexec_size;
+                   arg.dat->set->nonexec_size + arg.dat->set->padding_size;
 
     hipLaunchKernelGGL(export_halo_gather_soa, blocks, threads, 0, 0, 
         export_nonexec_list_partial_d[arg.map->index], arg.data_d,
@@ -218,7 +218,7 @@ void scatter_data_from_buffer(op_arg arg) {
       (OP_auto_soa && arg.dat->dim > 1)) {
 
     int set_size = arg.dat->set->size + arg.dat->set->exec_size +
-                   arg.dat->set->nonexec_size;
+                   arg.dat->set->nonexec_size + arg.dat->set->padding_size;
     int offset = arg.dat->set->size;
     int copy_size = arg.dat->set->exec_size;
 
@@ -245,7 +245,7 @@ void scatter_data_from_buffer_partial(op_arg arg) {
       (OP_auto_soa && arg.dat->dim > 1)) {
 
     int set_size = arg.dat->set->size + arg.dat->set->exec_size +
-                   arg.dat->set->nonexec_size;
+                   arg.dat->set->nonexec_size + arg.dat->set->padding_size;
     int init = OP_export_nonexec_permap[arg.map->index]->size;
     int copy_size = OP_import_nonexec_permap[arg.map->index]->size;
 
@@ -383,9 +383,11 @@ void gather_data_to_buffer_ptr_cuda(op_arg arg, halo_list eel, halo_list enl, ch
   }
   //Async upload
   hipMemcpyAsync(op2_grp_neigh_to_neigh_offsets_d,&op2_grp_neigh_to_neigh_offsets_h[op2_grp_counter*op2_grp_max_neighbours],eel->ranks_size * sizeof(unsigned),hipMemcpyHostToDevice);
+  const int set_size = arg.dat->set->size + arg.dat->set->exec_size 
+                       + arg.dat->set->nonexec_size + arg.dat->set->padding_size;
   //Launch kernel
   gather_data_to_buffer_ptr_cuda_kernel<<<1 + ((eel->size - 1) / 192),192>>>(arg.dat->data_d, buffer, export_exec_list_d[arg.dat->set->index], export_exec_list_disps_d[arg.dat->set->index], 
-    op2_grp_neigh_to_neigh_offsets_d, eel->ranks_size, soa, arg.dat->size/arg.dat->dim, arg.dat->dim, arg.dat->set->size+arg.dat->set->exec_size+arg.dat->set->nonexec_size);
+    op2_grp_neigh_to_neigh_offsets_d, eel->ranks_size, soa, arg.dat->size/arg.dat->dim, arg.dat->dim, set_size);
   op2_grp_counter++;
 
   //Same for nonexec
@@ -401,7 +403,7 @@ void gather_data_to_buffer_ptr_cuda(op_arg arg, halo_list eel, halo_list enl, ch
   hipMemcpyAsync(op2_grp_neigh_to_neigh_offsets_d,&op2_grp_neigh_to_neigh_offsets_h[op2_grp_counter*op2_grp_max_neighbours],enl->ranks_size * sizeof(unsigned),hipMemcpyHostToDevice);
   //Launch kernel
   gather_data_to_buffer_ptr_cuda_kernel<<<1 + ((enl->size - 1) / 192),192>>>(arg.dat->data_d, buffer, export_nonexec_list_d[arg.dat->set->index], export_nonexec_list_disps_d[arg.dat->set->index], 
-    op2_grp_neigh_to_neigh_offsets_d, enl->ranks_size, soa, arg.dat->size/arg.dat->dim, arg.dat->dim, arg.dat->set->size+arg.dat->set->exec_size+arg.dat->set->nonexec_size);
+    op2_grp_neigh_to_neigh_offsets_d, enl->ranks_size, soa, arg.dat->size/arg.dat->dim, arg.dat->dim, set_size);
 
   op2_grp_counter++;
 
@@ -426,10 +428,12 @@ void scatter_data_from_buffer_ptr_cuda(op_arg arg, halo_list iel, halo_list inl,
   }
   //Async upload
   hipMemcpyAsync(op2_grp_neigh_to_neigh_offsets_d,&op2_grp_neigh_to_neigh_offsets_h[op2_grp_counter*op2_grp_max_neighbours],iel->ranks_size * sizeof(unsigned),hipMemcpyHostToDevice,op2_grp_secondary);
+  const int set_size = arg.dat->set->size + arg.dat->set->exec_size 
+                       + arg.dat->set->nonexec_size + arg.dat->set->padding_size;
   //Launch kernel
   unsigned offset = arg.dat->set->size * (soa?arg.dat->size/arg.dat->dim:arg.dat->size);
   scatter_data_from_buffer_ptr_cuda_kernel<<<1 + ((iel->size - 1) / 192),192,0,op2_grp_secondary>>>(arg.dat->data_d+offset, buffer, import_exec_list_disps_d[arg.dat->set->index], 
-    op2_grp_neigh_to_neigh_offsets_d, iel->ranks_size, soa, arg.dat->size/arg.dat->dim, arg.dat->dim, arg.dat->set->size+arg.dat->set->exec_size+arg.dat->set->nonexec_size);
+    op2_grp_neigh_to_neigh_offsets_d, iel->ranks_size, soa, arg.dat->size/arg.dat->dim, arg.dat->dim, set_size);
   op2_grp_counter++;
 
   //Same for nonexec
@@ -446,7 +450,7 @@ void scatter_data_from_buffer_ptr_cuda(op_arg arg, halo_list iel, halo_list inl,
   //Launch kernel
   offset = (arg.dat->set->size + iel->size) * (soa?arg.dat->size/arg.dat->dim:arg.dat->size);
   scatter_data_from_buffer_ptr_cuda_kernel<<<1 + ((inl->size - 1) / 192),192,0,op2_grp_secondary>>>(arg.dat->data_d+offset, buffer, import_nonexec_list_disps_d[arg.dat->set->index], 
-    op2_grp_neigh_to_neigh_offsets_d, inl->ranks_size, soa, arg.dat->size/arg.dat->dim, arg.dat->dim, arg.dat->set->size+arg.dat->set->exec_size+arg.dat->set->nonexec_size);
+    op2_grp_neigh_to_neigh_offsets_d, inl->ranks_size, soa, arg.dat->size/arg.dat->dim, arg.dat->dim, set_size);
 
   op2_grp_counter++;
 

@@ -165,7 +165,7 @@ void op_print(const char *line) { printf("%s\n", line); }
 void op_timers(double *cpu, double *et) { op_timers_core(cpu, et); }
 
 int getSetSizeFromOpArg(op_arg *arg) {
-  return arg->opt ? arg->dat->set->size : 0;
+  return arg->opt ? arg->dat->set->size + arg->dat->set->padding_size : 0;
 }
 
 void op_renumber(op_map base) { (void)base; }

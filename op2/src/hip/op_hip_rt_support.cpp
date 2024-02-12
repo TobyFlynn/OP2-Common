@@ -281,7 +281,8 @@ void op_cuda_get_data(op_dat dat) {
   else
     return;
   // transpose data
-  size_t set_size = dat->set->size + dat->set->exec_size + dat->set->nonexec_size;
+  size_t set_size = dat->set->size + dat->set->exec_size + dat->set->nonexec_size
+                    + dat->set->padding_size;
   if (strstr(dat->type, ":soa") != NULL || (OP_auto_soa && dat->dim > 1)) {
     char *temp_data = (char *)malloc(dat->size * set_size * sizeof(char));
     cutilSafeCall(hipMemcpy(temp_data, dat->data_d, dat->size * set_size,
@@ -347,7 +348,8 @@ void cutilDeviceInit(int argc, char **argv) {
 void op_upload_dat(op_dat dat) {
   if (!OP_hybrid_gpu)
     return;
-  size_t set_size = dat->set->size + dat->set->exec_size + dat->set->nonexec_size;
+  size_t set_size = dat->set->size + dat->set->exec_size + dat->set->nonexec_size
+                    + dat->set->padding_size;
   if (strstr(dat->type, ":soa") != NULL || (OP_auto_soa && dat->dim > 1)) {
     char *temp_data = (char *)malloc(dat->size * set_size * sizeof(char));
     int element_size = dat->size / dat->dim;
@@ -371,7 +373,8 @@ void op_upload_dat(op_dat dat) {
 void op_download_dat(op_dat dat) {
   if (!OP_hybrid_gpu)
     return;
-  size_t set_size = dat->set->size + dat->set->exec_size + dat->set->nonexec_size;
+  size_t set_size = dat->set->size + dat->set->exec_size + dat->set->nonexec_size
+                    + dat->set->padding_size;
   if (strstr(dat->type, ":soa") != NULL || (OP_auto_soa && dat->dim > 1)) {
     char *temp_data = (char *)malloc(dat->size * set_size * sizeof(char));
     cutilSafeCall(hipMemcpy(temp_data, dat->data_d, set_size * dat->size,

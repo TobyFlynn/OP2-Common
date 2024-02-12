@@ -35,7 +35,7 @@ ifeq ($(HAVE_C),true)
   ifeq ($(HAVE_HIP),true)
     OP2_BUILDABLE_LIBS += hip
 
-    ifeq ($(MPI_IS_BUILDABLE),true)
+    ifeq ($(HIP_IS_BUILDABLE),true)
       OP2_BUILDABLE_LIBS += mpi_hip
     endif
   endif

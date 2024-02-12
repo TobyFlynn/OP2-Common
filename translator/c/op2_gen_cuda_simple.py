@@ -122,8 +122,8 @@ def op2_gen_cuda_simple(master, date, consts, kernels,sets, macro_defs, hip = 0)
 
 #Optimization settings
     inc_stage=0
-    op_color2_force=1
-    atomics=0
+    op_color2_force=0
+    atomics=1
 
     # TODO put this into create_kernel_info
     force_halo_compute = kernels[nk]['force_halo_compute']
@@ -780,7 +780,7 @@ def op2_gen_cuda_simple(master, date, consts, kernels,sets, macro_defs, hip = 0)
                 IF('optflags & 1<<'+str(optidxs[g_m]))
               for d in range(0,int(dims[g_m])):
                 atomicAdd = 'atomicAdd'
-                if hip == 1:
+                if hip == 1 and (typs[g_m]=='float' or typs[g_m]=='double'):
                   atomicAdd = 'unsafeAtomicAdd'
                 if soaflags[g_m]:
                   code(atomicAdd+'(&ind_arg'+str(inds[g_m]-1)+'['+str(d)+'*'+op2_gen_common.get_stride_string(g_m,maps,mapnames,name)+'+map'+str(mapinds[g_m])+'idx],<ARG>_l['+str(d)+']);')

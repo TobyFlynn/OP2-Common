@@ -199,7 +199,7 @@ void op_compute_moment_across_times(double* times, int ntimes, bool ignore_zeros
 void op_partition_reverse() {}
 
 int getSetSizeFromOpArg(op_arg *arg) {
-  return arg->opt ? arg->dat->set->size : 0;
+  return arg->opt ? arg->dat->set->size + arg->dat->set->padding_size : 0;
 }
 
 int op_is_root() { return 1; }

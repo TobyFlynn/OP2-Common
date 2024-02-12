@@ -9,9 +9,9 @@
 
 void cutilDeviceInit(int argc, char **argv);
 
-void op_mvHostToDevice(void **map, int size);
+void op_mvHostToDevice(void **map, size_t size);
 
-void op_cpHostToDevice(void **data_d, void **data_h, int size);
+void op_cpHostToDevice(void **data_d, void **data_h, size_t size);
 
 void op_cuda_exit();
 
@@ -165,7 +165,7 @@ void op_print(const char *line) { printf("%s\n", line); }
 void op_timers(double *cpu, double *et) { op_timers_core(cpu, et); }
 
 int getSetSizeFromOpArg(op_arg *arg) {
-  return arg->opt ? arg->dat->set->size : 0;
+  return arg->opt ? arg->dat->set->size + arg->dat->set->padding_size : 0;
 }
 
 void op_renumber(op_map base) { (void)base; }

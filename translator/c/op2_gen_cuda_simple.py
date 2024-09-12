@@ -902,11 +902,11 @@ def op2_gen_cuda_simple(master, date, consts, kernels,sets, macro_defs, hip = 0)
 #
     code('')
     comm(' initialise timers')
-    code('double cpu_t1, cpu_t2, wall_t1, wall_t2;')
-    code('op_timing_realloc('+str(nk)+');')
-    code('op_timers_core(&cpu_t1, &wall_t1);')
-    code('OP_kernels[' +str(nk)+ '].name      = name;')
-    code('OP_kernels[' +str(nk)+ '].count    += 1;')
+    # code('double cpu_t1, cpu_t2, wall_t1, wall_t2;')
+    # code('op_timing_realloc('+str(nk)+');')
+    # code('op_timers_core(&cpu_t1, &wall_t1);')
+    # code('OP_kernels[' +str(nk)+ '].name      = name;')
+    # code('OP_kernels[' +str(nk)+ '].count    += 1;')
     code('')
 
 #
@@ -1002,12 +1002,14 @@ def op2_gen_cuda_simple(master, date, consts, kernels,sets, macro_defs, hip = 0)
         for g_m in range(0,nargs):
           if maps[g_m] == OP_MAP and (not mapnames[g_m] in k):
             k = k + [mapnames[g_m]]
-            IF('(OP_kernels[' +str(nk)+ '].count==1) || (opDat'+str(invinds[inds[g_m]-1])+'_'+name+'_stride_OP2HOST != getSetSizeFromOpArg(&arg'+str(g_m)+'))')
+            # IF('(OP_kernels[' +str(nk)+ '].count==1) || (opDat'+str(invinds[inds[g_m]-1])+'_'+name+'_stride_OP2HOST != getSetSizeFromOpArg(&arg'+str(g_m)+'))')
+            IF('opDat'+str(invinds[inds[g_m]-1])+'_'+name+'_stride_OP2HOST != getSetSizeFromOpArg(&arg'+str(g_m)+')')
             code('opDat'+str(invinds[inds[g_m]-1])+'_'+name+'_stride_OP2HOST = getSetSizeFromOpArg(&arg'+str(g_m)+');')
             code(cuda+'MemcpyToSymbol('+symbol_wrapper_l+'opDat'+str(invinds[inds[g_m]-1])+'_'+name+'_stride_OP2CONSTANT'+symbol_wrapper_r+', &opDat'+str(invinds[inds[g_m]-1])+'_'+name+'_stride_OP2HOST,sizeof(int));')
             ENDIF()
       if dir_soa!=-1:
-          IF('(OP_kernels[' +str(nk)+ '].count==1) || (direct_'+name+'_stride_OP2HOST != getSetSizeFromOpArg(&arg'+str(dir_soa)+'))')
+          # IF('(OP_kernels[' +str(nk)+ '].count==1) || (direct_'+name+'_stride_OP2HOST != getSetSizeFromOpArg(&arg'+str(dir_soa)+'))')
+          IF('direct_'+name+'_stride_OP2HOST != getSetSizeFromOpArg(&arg'+str(dir_soa)+')')
           code('direct_'+name+'_stride_OP2HOST = getSetSizeFromOpArg(&arg'+str(dir_soa)+');')
           code(cuda+'MemcpyToSymbol('+symbol_wrapper_l+'direct_'+name+'_stride_OP2CONSTANT'+symbol_wrapper_r+',&direct_'+name+'_stride_OP2HOST,sizeof(int));')
           ENDIF()
@@ -1258,9 +1260,9 @@ def op2_gen_cuda_simple(master, date, consts, kernels,sets, macro_defs, hip = 0)
 
       code(indent+'set->size );')
 
-    if ninds>0 and not atomics:
-      code('OP_kernels['+str(nk)+'].transfer  += Plan->transfer;')
-      code('OP_kernels['+str(nk)+'].transfer2 += Plan->transfer2;')
+    # if ninds>0 and not atomics:
+    #   code('OP_kernels['+str(nk)+'].transfer  += Plan->transfer;')
+    #   code('OP_kernels['+str(nk)+'].transfer2 += Plan->transfer2;')
 
 
 #
@@ -1321,22 +1323,22 @@ def op2_gen_cuda_simple(master, date, consts, kernels,sets, macro_defs, hip = 0)
 
     code('cutilSafeCall('+cuda+'DeviceSynchronize());')
     comm('update kernel record')
-    code('op_timers_core(&cpu_t2, &wall_t2);')
-    code('OP_kernels[' +str(nk)+ '].time     += wall_t2 - wall_t1;')
+    # code('op_timers_core(&cpu_t2, &wall_t2);')
+    # code('OP_kernels[' +str(nk)+ '].time     += wall_t2 - wall_t1;')
 
-    if ninds == 0:
-      line = 'OP_kernels['+str(nk)+'].transfer += (float)set->size *'
+    # if ninds == 0:
+    #   line = 'OP_kernels['+str(nk)+'].transfer += (float)set->size *'
 
-      for g_m in range (0,nargs):
-        if optflags[g_m]==1:
-          IF('<ARG>.opt')
-        if maps[g_m]!=OP_GBL:
-          if accs[g_m]==OP_READ:
-            code(line+' <ARG>.size;')
-          else:
-            code(line+' <ARG>.size * 2.0f;')
-        if optflags[g_m]==1:
-          ENDIF()
+    #   for g_m in range (0,nargs):
+    #     if optflags[g_m]==1:
+    #       IF('<ARG>.opt')
+    #     if maps[g_m]!=OP_GBL:
+    #       if accs[g_m]==OP_READ:
+    #         code(line+' <ARG>.size;')
+    #       else:
+    #         code(line+' <ARG>.size * 2.0f;')
+    #     if optflags[g_m]==1:
+    #       ENDIF()
     depth = depth - 2
     code('}')
 
